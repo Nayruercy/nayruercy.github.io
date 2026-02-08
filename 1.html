@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>说明书</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        body {
+            background-color: #fff;
+            max-width: 600px;
+            margin: 0 auto;
+            padding-bottom: 30px;
+        }
+        /* 顶部红色装饰条 */
+        .top-banner {
+            width: 100%;
+            height: 50px;
+            background: linear-gradient(to right, #c91a20, #e63a3f);
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+        /* 标题区域 */
+        .title-box {
+            text-align: center;
+            padding: 25px 20px;
+        }
+        .main-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .sub-title {
+            font-size: 16px;
+            color: #555;
+            font-weight: normal;
+        }
+        /* 使用说明红条 */
+        .use-btn {
+            width: 90%;
+            margin: 0 auto 20px;
+            height: 48px;
+            line-height: 48px;
+            background-color: #c91a20;
+            color: #fff;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 6px;
+        }
+        /* 提示文字 */
+        .tip-text {
+            text-align: center;
+            font-size: 17px;
+            color: #d81f26;
+            font-weight: 500;
+            margin: 15px 0;
+        }
+        /* 文件列表容器 */
+        .file-list {
+            width: 92%;
+            margin: 0 auto;
+        }
+        /* 单文件项 */
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 12px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .file-item:hover {
+            background-color: #fafafa;
+            border-color: #ddd;
+        }
+        /* PDF图标 */
+        .pdf-icon {
+            width: 36px;
+            height: 36px;
+            background-color: #f03a3a;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 20px;
+            font-weight: bold;
+            margin-right: 12px;
+            position: relative;
+        }
+        .pdf-icon::after {
+            content: "F";
+            position: absolute;
+            font-size: 12px;
+            bottom: 2px;
+            right: 3px;
+        }
+        /* 文件信息 */
+        .file-info {
+            flex: 1;
+        }
+        .file-name {
+            font-size: 15px;
+            color: #222;
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+        .file-size {
+            font-size: 13px;
+            color: #888;
+        }
+        /* 产品展示图 */
+        .product-img {
+            width: 80%;
+            margin: 30px auto 0;
+            display: block;
+        }
+        /* 上传区域样式 */
+        .upload-box {
+            width: 92%;
+            margin: 20px auto;
+            padding: 20px;
+            border: 2px dashed #c91a20;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .upload-title {
+            font-size: 16px;
+            color: #c91a20;
+            margin-bottom: 12px;
+            font-weight: bold;
+        }
+        .upload-input {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部红色条 -->
+    <div class="top-banner"></div>
+
+    <!-- 标题区域 -->
+    <div class="title-box">
+        <h1 class="main-title">提升未来</h1>
+        <h2 class="sub-title">产品手册</h2>
+    </div>
+
+    <!-- 使用说明按钮 -->
+    <div class="use-btn">使用说明</div>
+
+    <!-- 提示文字 -->
+    <div class="tip-text">点击下方文件，查看完整说明书</div>
+
+    <!-- PDF上传区域 -->
+    <div class="upload-box">
+        <div class="upload-title">上传PDF文档</div>
+        <input type="file" class="upload-input" id="pdfUpload" accept=".pdf" multiple>
+        <p style="margin-top:8px; font-size:12px; color:#666;">支持多选上传PDF文件</p>
+    </div>
+
+    <!-- 文件列表 -->
+    <div class="file-list">
+        <!-- 第一个PDF文件 -->
+        <div class="file-item" onclick="openFile(1)">
+            <div class="pdf-icon">P</div>
+            <div class="file-info">
+                <div class="file-name">零件目录.pdf</div>
+                <div class="file-size">5.44MB</div>
+            </div>
+        </div>
+
+        <!-- 第二个PDF文件 -->
+        <div class="file-item" onclick="openFile(2)">
+            <div class="pdf-icon">P</div>
+            <div class="file-info">
+                <div class="file-name">使用维护保养说明书.pdf</div>
+                <div class="file-size">1.31MB</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 产品展示图 -->
+    <img src="https://img-blog.csdnimg.cn/20250306152222666.png" alt="CDD12J电动堆垛车" class="product-img">
+
+    <script>
+        // PDF文件点击打开/下载逻辑
+        function openFile(type) {
+            if(type == 1) {
+                // 零件目录PDF 可替换为你的实际PDF链接
+                window.open("零件目录.pdf", "_blank");
+            } else if(type == 2) {
+                // 维护说明书PDF 可替换为你的实际PDF链接
+                window.open("使用维护保养说明书.pdf", "_blank");
+            }
+        }
+
+        // 上传文件监听
+        document.getElementById('pdfUpload').addEventListener('change', function(e) {
+            const files = e.target.files;
+            if(files.length > 0) {
+                alert("已选择 " + files.length + " 个PDF文件，可对接后端实现上传保存！");
+                // 此处可对接AJAX/axios实现真实上传到服务器
+            }
+        });
+    </script>
+</body>
+</html>
