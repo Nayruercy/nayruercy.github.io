@@ -113,61 +113,62 @@
                 </tr>
             </thead>
             <tbody>
+                <!-- 为每个任务添加data-cycle属性标记周期类型 -->
                 <tr>
                     <td>1</td>
                     <td>成品三部一车间设备每月巡检</td>
                     <td class="dynamic-time">2026-01-28 00:00~2026-02-27 00:00</td>
                     <td class="current-time">加载中...</td>
-                    <td></td>
+                    <td data-cycle="monthly"></td>
                 </tr>
                 <tr>
                     <td>2</td>
                     <td>成品三部二车间设备每月巡检</td>
                     <td class="dynamic-time">2026-01-28 00:00~2026-02-27 00:00</td>
                     <td class="current-time">加载中...</td>
-                    <td></td>
+                    <td data-cycle="monthly"></td>
                 </tr>
                 <tr>
                     <td>3</td>
                     <td>成品三部一车间月度保养计划</td>
                     <td class="dynamic-time">2026-01-20 00:00~2026-02-17 00:00</td>
                     <td class="current-time">加载中...</td>
-                    <td></td>
+                    <td data-cycle="monthly"></td>
                 </tr>
                 <tr>
                     <td>4</td>
                     <td>成品三部一车间每季度保养计划</td>
                     <td class="dynamic-time">2025-11-29 00:00~2026-02-25 00:00</td>
                     <td class="current-time">加载中...</td>
-                    <td></td>
+                    <td data-cycle="quarterly"></td>
                 </tr>
                 <tr>
                     <td>5</td>
                     <td>成品三部一车间每半年保养计划</td>
                     <td class="dynamic-time">2025-09-02 00:00~2026-02-22 00:00</td>
                     <td class="current-time">加载中...</td>
-                    <td></td>
+                    <td data-cycle="halfyearly"></td>
                 </tr>
                 <tr>
                     <td>6</td>
                     <td>成品三部二车间月度保养计划</td>
                     <td class="dynamic-time">2026-02-03 00:00~2026-03-03 00:00</td>
                     <td class="current-time">加载中...</td>
-                    <td></td>
+                    <td data-cycle="monthly"></td>
                 </tr>
                 <tr>
                     <td>7</td>
                     <td>成品三部二车间每季度保养计划</td>
                     <td class="dynamic-time">2025-12-13 00:00~2026-03-11 00:00</td>
                     <td class="current-time">加载中...</td>
-                    <td></td>
+                    <td data-cycle="quarterly"></td>
                 </tr>
                 <tr>
                     <td>8</td>
                     <td>成品三部二车间每半年保养计划</td>
                     <td class="dynamic-time">2025-09-16 00:00~2026-03-08 00:00</td>
                     <td class="current-time">加载中...</td>
-                    <td></td>
+                    <td data-cycle="halfyearly"></td>
                 </tr>
             </tbody>
         </table>
@@ -185,6 +186,17 @@
             return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
         }
 
+        // 格式化日期为指定格式（YYYY-MM-DD HH:mm:ss）
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hour = String(date.getHours()).padStart(2, '0');
+            const minute = String(date.getMinutes()).padStart(2, '0');
+            const second = String(date.getSeconds()).padStart(2, '0');
+            return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+        }
+
         // 更新现在时间（实时刷新）
         function updateCurrentTime() {
             const currentTimeElements = document.querySelectorAll('.current-time');
@@ -193,8 +205,37 @@
             });
         }
 
-        // 核心逻辑：判断计划结束时间是否在15天内，显示红灯+剩余天数提醒
-        function checkDeadlineAndShowLight() {
+        // 根据周期类型计算下一个周期的时间
+        function calculateNextCycle(startTime, endTime, cycleType) {
+            const newStart = new Date(startTime);
+            const newEnd = new Date(endTime);
+            
+            switch(cycleType) {
+                case 'monthly': // 每月
+                    newStart.setMonth(newStart.getMonth() + 1);
+                    newEnd.setMonth(newEnd.getMonth() + 1);
+                    break;
+                case 'quarterly': // 每季度（3个月）
+                    newStart.setMonth(newStart.getMonth() + 3);
+                    newEnd.setMonth(newEnd.getMonth() + 3);
+                    break;
+                case 'halfyearly': // 每半年（6个月）
+                    newStart.setMonth(newStart.getMonth() + 6);
+                    newEnd.setMonth(newEnd.getMonth() + 6);
+                    break;
+                default: // 默认每月
+                    newStart.setMonth(newStart.getMonth() + 1);
+                    newEnd.setMonth(newEnd.getMonth() + 1);
+            }
+            
+            return {
+                newStart: formatDate(newStart),
+                newEnd: formatDate(newEnd)
+            };
+        }
+
+        // 核心逻辑：1.判断是否到期，自动更新周期 2.判断15天内到期，显示提醒
+        function checkDeadlineAndUpdateCycle() {
             // 15天的毫秒数：15*24*60*60*1000
             const fifteenDaysMs = 15 * 86400000;
             // 1天的毫秒数，用于计算剩余天数
@@ -202,20 +243,37 @@
             const rows = document.querySelectorAll('.task-table tbody tr');
             
             rows.forEach(row => {
-                // 获取计划时间列的文本，拆分出结束时间
-                const timeText = row.querySelector('.dynamic-time').textContent;
-                const endTimeStr = timeText.split('~')[1].trim();
+                // 获取计划时间列元素
+                const timeElement = row.querySelector('.dynamic-time');
+                // 获取计划时间文本，拆分出开始和结束时间
+                const timeText = timeElement.textContent;
+                const [startTimeStr, endTimeStr] = timeText.split('~').map(t => t.trim());
+                
                 // 转换为Date对象
+                const startTime = new Date(startTimeStr);
                 const endTime = new Date(endTimeStr);
                 const now = new Date();
                 // 计算时间差（结束时间 - 当前时间）
                 const timeDiff = endTime - now;
-                // 获取备注列
+                
+                // 获取备注列和周期类型
                 const remarkTd = row.lastElementChild;
+                const cycleType = remarkTd.getAttribute('data-cycle');
                 // 清空原有内容，避免重复添加
                 remarkTd.innerHTML = '';
 
-                // 时间差≥0（未过期）且≤15天，显示红灯+提醒文字
+                // 1. 判断是否已到期（结束时间 < 当前时间），如果是则更新为下一个周期
+                if (timeDiff < 0) {
+                    // 计算下一个周期的时间
+                    const { newStart, newEnd } = calculateNextCycle(startTime, endTime, cycleType);
+                    // 更新计划时间显示
+                    timeElement.textContent = `${newStart}~${newEnd}`;
+                    // 在备注中提示已更新
+                    remarkTd.innerHTML = '<span style="color: #52c41a; font-weight: 500;">已自动更新至下一个周期</span>';
+                    return; // 已更新，无需再检查提醒
+                }
+
+                // 2. 未到期但≤15天，显示红灯+提醒文字
                 if (timeDiff >= 0 && timeDiff <= fifteenDaysMs) {
                     // 计算剩余天数（向上取整，避免出现0天的情况）
                     const remainingDays = Math.ceil(timeDiff / oneDayMs);
@@ -238,12 +296,12 @@
         window.onload = function() {
             // 首次加载更新现在时间
             updateCurrentTime();
-            // 首次执行截止时间判断，显示红灯和提醒
-            checkDeadlineAndShowLight();
+            // 首次执行截止时间判断和周期更新
+            checkDeadlineAndUpdateCycle();
             // 每秒刷新一次现在时间
             setInterval(updateCurrentTime, 1000);
-            // 每分钟刷新一次红灯和提醒（可根据需求调整频率）
-            setInterval(checkDeadlineAndShowLight, 60000);
+            // 每分钟刷新一次周期检查和提醒（可根据需求调整频率）
+            setInterval(checkDeadlineAndUpdateCycle, 60000);
         };
     </script>
 </body>
